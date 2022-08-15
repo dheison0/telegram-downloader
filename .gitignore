@@ -1,0 +1,8 @@
+# Folders
+.venv/
+__pycache__/
+
+# Files
+.env
+bot.session
+bot.session-journal
