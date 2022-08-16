@@ -7,7 +7,9 @@ load_dotenv()
 ADMINS = getenv('ADMINS').split()
 DL_FOLDER = getenv('DOWNLOAD_FOLDER', '/data')
 
-mkdir(DL_FOLDER)
+try: mkdir(DL_FOLDER)
+except FileExistsError: pass
+
 app = Client(
     name=__name__,
     api_id=int(getenv('TELEGRAM_API_ID')),
