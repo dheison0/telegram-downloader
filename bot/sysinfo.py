@@ -1,6 +1,9 @@
-from . import util
 from dataclasses import dataclass
+
 import psutil
+
+from . import util
+
 
 @dataclass
 class Usage:
@@ -8,6 +11,7 @@ class Usage:
     used: str
     free: str
     percent: int
+
 
 def diskUsage(f: str) -> Usage:
     u = psutil.disk_usage(f)

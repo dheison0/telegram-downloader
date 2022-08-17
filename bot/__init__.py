@@ -1,4 +1,5 @@
 from os import getenv, mkdir
+
 from dotenv import load_dotenv
 from pyrogram import Client
 
@@ -7,8 +8,10 @@ load_dotenv()
 ADMINS = getenv('ADMINS').split()
 DL_FOLDER = getenv('DOWNLOAD_FOLDER', '/data')
 
-try: mkdir(DL_FOLDER)
-except FileExistsError: pass
+try:
+    mkdir(DL_FOLDER)
+except FileExistsError:
+    pass
 
 app = Client(
     name=__name__,
