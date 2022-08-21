@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Actual bot",
+            "type": "python",
+            "request": "launch",
+            "module": "bot",
+            "justMyCode": true
+        }
+    ]
+}

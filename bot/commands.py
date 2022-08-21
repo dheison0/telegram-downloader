@@ -21,15 +21,10 @@ async def start(_, msg: Message):
 async def usage(_, msg: Message):
     u = sysinfo.diskUsage(DL_FOLDER)
     await msg.reply(
-        textwrap.dedent(
-            f"""
-            Used: __{u.used} of {u.capacity}({u.percent})__
-            Free: __{u.free}__
-            """
-        ),
+        f"I'm running on a system with __{u.capacity}__ of storage and it's using __{u.used}__, this is __{u.percent}__ of the capacity, so it has __{u.free}__ free",
         parse_mode=ParseMode.MARKDOWN
     )
 
 
 async def botHelp(_, msg: Message):
-    pass
+    await msg.reply("// TODO")

@@ -1,63 +1,59 @@
-from dataclasses import dataclass
-from random import choices, randint
-from string import ascii_letters, digits
-from time import time
-from typing import Dict, List
+from time import time, sleep
+from typing import List
 
-from pyrogram import Client
 from pyrogram.enums import ParseMode
 from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
-                            InlineKeyboardMarkup, Message)
+                            InlineKeyboardMarkup)
 
-from . import DL_FOLDER, util
+from .. import DL_FOLDER, util, app
+from .type import Download
+from threading import Thread
 
-
-@dataclass
-class Download:
-    id: int
-    filename: str
-    progress_message: Message
-    started: float
-    last_update: float
-    last_call: float = 0
-
-
-# List of running downloads
-downloading: Dict[int, Download] = {}
+downloads: List[Download] = []
+running: int = 0
 # List of downloads to stop
 stop: List[int] = []
 
 
-async def download(app: Client, msg: Message):
-    caption = msg.caption or ""
-    if caption[:1] == '>':
-        filename = caption[2:]
-    else:
-        try:
-            media = getattr(msg, msg.media.value)
-            filename = media.file_name
-        except AttributeError:
-            filename = ''.join(choices(ascii_letters+digits, k=12))
-    reply = await msg.reply("Downloading...")
-    id = randint(1e9, 1e10-1)
-    downloading[id] = Download(id, filename, reply, time(), 0)
-    r = await app.download_media(
-        message=msg,
-        file_name=DL_FOLDER+'/'+filename,
-        progress=progress,
-        progress_args=(app, downloading[id])
+def run():
+    global running
+    while True:
+        for download in downloads:
+            if running == 3:
+                break
+            Thread(target=downloadFile, args=(download,)).start()
+            running += 1
+            downloads.remove(download)
+        sleep(1)
+
+
+def downloadFile(d: Download):
+    global running
+    d.progress_message = d.from_message.reply(
+        text=f"Downloading __{d.filename}__...",
+        parse_mode=ParseMode.MARKDOWN
     )
-    downloading.pop(id)
-    if r is not None:
-        await app.edit_message_text(
-            chat_id=reply.chat.id,
-            message_id=reply.id,
-            text=f"File saved as `{filename}`",
-            parse_mode=ParseMode.MARKDOWN
-        )
+    d.started = time()
+    r = app.download_media(
+        message=d.from_message,
+        file_name=DL_FOLDER+'/'+d.filename,
+        progress=progress,
+        progress_args=tuple([d])
+    )
+    if r:
+        text = f"File __{d.filename}__ downloaded."
+    else:
+        text = f"Download of __{d.filename}__ stopped!"
+    app.edit_message_text(
+        chat_id=d.progress_message.chat.id,
+        message_id=d.progress_message.id,
+        text=text,
+        parse_mode=ParseMode.MARKDOWN
+    )
+    running -= 1
 
 
-async def progress(received: int, total: int, app: Client, download: Download):
+async def progress(received: int, total: int, download: Download):
     # This function is called every time that 1MB is downloaded
     if download.id in stop:
         await app.edit_message_text(
@@ -66,9 +62,8 @@ async def progress(received: int, total: int, app: Client, download: Download):
             text=f"Download of __{download.filename}__ stopped!",
             parse_mode=ParseMode.MARKDOWN
         )
-        app.stop_transmission()
+        await app.stop_transmission()
         stop.remove(download.id)
-        downloading.pop(download.id)
         return
     # Only update download progress if the last update is 1 second old
     # : This avoid flood on networks that is more than 1MB/s speed
