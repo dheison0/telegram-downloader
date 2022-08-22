@@ -5,7 +5,7 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
                             InlineKeyboardMarkup)
 
-from .. import DL_FOLDER, util, app
+from .. import util, app, BASE_FOLDER
 from .type import Download
 from threading import Thread
 
@@ -36,7 +36,7 @@ def downloadFile(d: Download):
     d.started = time()
     r = app.download_media(
         message=d.from_message,
-        file_name=DL_FOLDER+'/'+d.filename,
+        file_name=BASE_FOLDER+'/'+d.filename,
         progress=progress,
         progress_args=tuple([d])
     )

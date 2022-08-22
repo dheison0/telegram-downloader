@@ -9,6 +9,8 @@ from threading import Thread
 app.add_handler(MessageHandler(commands.start, command('start')))
 app.add_handler(MessageHandler(commands.botHelp, command('help')))
 app.add_handler(MessageHandler(commands.usage, command('usage')))
+app.add_handler(MessageHandler(commands.useFolder, command('use')))
+app.add_handler(MessageHandler(commands.leaveFolder, command('leave')))
 app.add_handler(MessageHandler(download.handler.addFile, document | media))
 app.add_handler(CallbackQueryHandler(download.manager.stopDownload))
 

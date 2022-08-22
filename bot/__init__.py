@@ -6,7 +6,8 @@ from pyrogram import Client
 load_dotenv()
 
 ADMINS = getenv('ADMINS').split()
-DL_FOLDER = getenv('DOWNLOAD_FOLDER', '/data')
+BASE_FOLDER = getenv('DOWNLOAD_FOLDER', '/data')
+DL_FOLDER = BASE_FOLDER
 
 try:
     mkdir(DL_FOLDER)

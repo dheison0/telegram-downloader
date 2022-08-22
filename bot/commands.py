@@ -3,7 +3,9 @@ import textwrap
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from . import DL_FOLDER, sysinfo
+from . import DL_FOLDER, sysinfo, BASE_FOLDER
+from . import folder
+from os import mkdir
 
 
 async def start(_, msg: Message):
@@ -28,3 +30,21 @@ async def usage(_, msg: Message):
 
 async def botHelp(_, msg: Message):
     await msg.reply("// TODO")
+
+
+async def useFolder(_, msg: Message):
+    newFolder = ''.join(msg.text.split()[1:])
+    try:
+        mkdir(BASE_FOLDER + '/' + newFolder)
+    except FileExistsError:
+        pass
+    except Exception as err:
+        await msg.reply(f"Failed to open folder: {err}")
+        return
+    folder.set(newFolder)
+    await msg.reply("Ok, send me files now and I will put it on this folder.")
+
+
+async def leaveFolder(_, msg: Message):
+    folder.set('.')
+    await msg.reply("I'm in the root folder again.")
