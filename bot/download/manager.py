@@ -1,3 +1,4 @@
+from textwrap import dedent
 from time import time, sleep
 from typing import List
 
@@ -5,7 +6,8 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
                             InlineKeyboardMarkup)
 
-from .. import util, app, BASE_FOLDER
+from .. import app, BASE_FOLDER
+from ..util import humanReadable
 from .type import Download
 from threading import Thread
 
@@ -29,36 +31,29 @@ def run():
 
 def downloadFile(d: Download):
     global running
-    d.progress_message = d.from_message.reply(
+    d.progress_message.edit(
         text=f"Downloading __{d.filename}__...",
         parse_mode=ParseMode.MARKDOWN
     )
     d.started = time()
-    r = app.download_media(
+    result = app.download_media(
         message=d.from_message,
         file_name=BASE_FOLDER+'/'+d.filename,
         progress=progress,
         progress_args=tuple([d])
     )
-    if r:
+    if isinstance(result, str):
         text = f"File __{d.filename}__ downloaded."
     else:
         text = f"Download of __{d.filename}__ stopped!"
-    app.edit_message_text(
-        chat_id=d.progress_message.chat.id,
-        message_id=d.progress_message.id,
-        text=text,
-        parse_mode=ParseMode.MARKDOWN
-    )
+    d.progress_message.edit(text, parse_mode=ParseMode.MARKDOWN)
     running -= 1
 
 
 async def progress(received: int, total: int, download: Download):
     # This function is called every time that 1MB is downloaded
     if download.id in stop:
-        await app.edit_message_text(
-            chat_id=download.progress_message.chat.id,
-            message_id=download.progress_message.id,
+        await download.progress_message.edit(
             text=f"Download of __{download.filename}__ stopped!",
             parse_mode=ParseMode.MARKDOWN
         )
@@ -76,13 +71,13 @@ async def progress(received: int, total: int, download: Download):
         download.last_call = now - 1
     speed = (1024**2) / (now - download.last_call)
     avg_speed = received / (now - download.started)
-    text = f"Downloading: __{download.filename}__\n\n"
-    text += f"__{util.humanReadable(received)} of {util.humanReadable(total)} ({percent:.2f}%)\n"
-    text += f"{util.humanReadable(speed)}/s or {util.humanReadable(avg_speed)}/s average since start__"
-    await app.edit_message_text(
-        chat_id=download.progress_message.chat.id,
-        message_id=download.progress_message.id,
-        text=text,
+    await download.progress_message.edit(
+        text=dedent(f'''
+            Downloading: __{download.filename}__
+
+            Downloaded __{humanReadable(received)}__ of __{humanReadable(total)}__ (__{percent:.2f}%__)
+            __{humanReadable(speed)}/s__ or __{humanReadable(avg_speed)}/s__ average since start
+        '''),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup([[
             InlineKeyboardButton("Stop", callback_data=f"stop {download.id}")

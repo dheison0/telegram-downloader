@@ -1,23 +1,18 @@
-import textwrap
+from os import mkdir
+from textwrap import dedent
 
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from . import DL_FOLDER, sysinfo, BASE_FOLDER
-from . import folder
-from os import mkdir
+from . import BASE_FOLDER, DL_FOLDER, folder, sysinfo
 
 
 async def start(_, msg: Message):
-    await msg.reply(
-        textwrap.dedent(
-            """
-            Hello!
-            Send me a file and I will download it to my server.
-            If you need help send /help
-            """
-        )
-    )
+    await msg.reply(dedent("""
+        Hello!
+        Send me a file and I will download it to my server.
+        If you need help send /help
+    """))
 
 
 async def usage(_, msg: Message):
@@ -33,7 +28,10 @@ async def botHelp(_, msg: Message):
 
 
 async def useFolder(_, msg: Message):
-    newFolder = ''.join(msg.text.split()[1:])
+    newFolder = ' '.join(msg.text.split()[1:])
+    if '..' in newFolder:
+        await msg.reply("Two dots is not allowed on the folder name!")
+        return
     try:
         mkdir(BASE_FOLDER + '/' + newFolder)
     except FileExistsError:

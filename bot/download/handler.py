@@ -1,3 +1,4 @@
+from os.path import isfile
 from random import choices, randint
 from string import ascii_letters, digits
 from time import time
@@ -5,9 +6,9 @@ from time import time
 from pyrogram.enums.parse_mode import ParseMode
 from pyrogram.types import Message
 
+from .. import folder
 from .manager import downloads
 from .type import Download
-from ..import folder
 
 
 async def addFile(_, msg: Message):
@@ -21,7 +22,10 @@ async def addFile(_, msg: Message):
             filename += media.file_name
         except AttributeError:
             filename += ''.join(choices(ascii_letters+digits, k=12))
-    m = await msg.reply(
+    if isfile(filename):
+        await msg.reply("File already exists!")
+        return
+    waiting = await msg.reply(
         f"File __{filename}__ added to list.",
         parse_mode=ParseMode.MARKDOWN
     )
@@ -30,5 +34,5 @@ async def addFile(_, msg: Message):
         filename=filename,
         from_message=msg,
         added=time(),
-        progress_message=m
+        progress_message=waiting
     ))
