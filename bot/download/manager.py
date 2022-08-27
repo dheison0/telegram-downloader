@@ -43,10 +43,10 @@ def downloadFile(d: Download):
         progress_args=tuple([d])
     )
     if isinstance(result, str):
-        text = f"File __{d.filename}__ downloaded."
-    else:
-        text = f"Download of __{d.filename}__ stopped!"
-    d.progress_message.edit(text, parse_mode=ParseMode.MARKDOWN)
+        d.progress_message.edit(
+            f"File __{d.filename}__ downloaded.",
+            parse_mode=ParseMode.MARKDOWN
+        )
     running -= 1
 
 
@@ -83,8 +83,8 @@ async def progress(received: int, total: int, download: Download):
             InlineKeyboardButton("Stop", callback_data=f"stop {download.id}")
         ]])
     )
-    download.last_update = time()
-    download.last_call = time()
+    download.last_update = now
+    download.last_call = now
 
 
 async def stopDownload(_, callback: CallbackQuery):

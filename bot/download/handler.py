@@ -23,10 +23,11 @@ async def addFile(_, msg: Message):
         except AttributeError:
             filename += ''.join(choices(ascii_letters+digits, k=12))
     if isfile(filename):
-        await msg.reply("File already exists!")
+        await msg.reply("File already exists!", quote=True)
         return
     waiting = await msg.reply(
         f"File __{filename}__ added to list.",
+        quote=True,
         parse_mode=ParseMode.MARKDOWN
     )
     downloads.append(Download(
