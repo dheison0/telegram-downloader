@@ -1,5 +1,5 @@
 from textwrap import dedent
-from time import time, sleep
+from time import ctime, time, sleep
 from typing import List
 
 from pyrogram.enums import ParseMode
@@ -43,8 +43,14 @@ def downloadFile(d: Download):
         progress_args=tuple([d])
     )
     if isinstance(result, str):
+        speed = humanReadable(d.size / (d.last_call - d.started))
         d.progress_message.edit(
-            f"File __{d.filename}__ downloaded.",
+            dedent(f"""
+                File __{d.filename}__ downloaded.
+
+                Downloaded started at __{ctime(d.started)}__ and finished at __{ctime(d.last_call)}__
+                It's an average speed of __{speed}/s__
+            """),
             parse_mode=ParseMode.MARKDOWN
         )
     running -= 1
@@ -64,6 +70,7 @@ async def progress(received: int, total: int, download: Download):
     # : This avoid flood on networks that is more than 1MB/s speed
     now = time()
     if download.last_update != 0 and (time() - download.last_update) < 1:
+        download.size = total
         download.last_call = now
         return
     percent = received / total * 100

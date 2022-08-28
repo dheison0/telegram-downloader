@@ -11,3 +11,4 @@ class Download:
     started: float = 0
     last_update: float = 0
     last_call: float = 0
+    size: int = 0
