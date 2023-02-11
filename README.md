@@ -1,5 +1,5 @@
 [Pyrogram Framework]: <https://github.com/pyrogram/pyrogram>
-[My Telegram]: <https//my.telegram.org>
+[My Telegram]: <https://my.telegram.org>
 [BotFather]: <https://t.me/BotFather>
 
 
