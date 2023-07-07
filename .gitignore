@@ -1,10 +1,7 @@
 # Folders
 .venv/
 __pycache__/
-test/
 
 # Files
 .env
-.env.prod
-bot.session
-bot.session-journal
+*.session*

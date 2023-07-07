@@ -1,44 +1,25 @@
-from threading import Thread
+import asyncio
+import logging
 
 from pyrogram import idle
-from pyrogram.filters import command, document, media
-from pyrogram.handlers.callback_query_handler import CallbackQueryHandler
-from pyrogram.handlers.message_handler import MessageHandler
 
 from . import app, commands, download
-from .util import checkAdmins
 
-app.add_handler(MessageHandler(
-    checkAdmins(commands.start),
-    command('start')
-))
-app.add_handler(MessageHandler(
-    checkAdmins(commands.botHelp),
-    command('help')
-))
-app.add_handler(MessageHandler(
-    checkAdmins(commands.usage),
-    command('usage')
-))
-app.add_handler(MessageHandler(
-    checkAdmins(commands.useFolder),
-    command('use')
-    ))
-app.add_handler(MessageHandler(
-    checkAdmins(commands.leaveFolder),
-    command('leave')
-))
-app.add_handler(MessageHandler(
-    checkAdmins(download.handler.addFile),
-    document | media
-))
-app.add_handler(CallbackQueryHandler(download.manager.stopDownload))
 
-app.start()
-print("Bot started!")
-print("Press CTRL+\\ to stop...")
-t = Thread(target=download.manager.run)
-t.start()
-idle()
-t.join()
-app.stop()
+async def main():
+    logging.info("Registering commands...")
+    commands.register(app)
+    await app.start()
+    logging.info("Starting download manager...")
+    manager = asyncio.create_task(download.manager.run())
+    me = await app.get_me()
+    logging.info(f"Bot started! I'm @{me.username}")
+    await idle()
+    logging.info("Stopping bot...")
+    manager.cancel()
+    await app.stop()
+    logging.info("Bot stopped!")
+    return 0
+
+event_loop = asyncio.get_event_loop()
+event_loop.run_until_complete(main())

@@ -1,15 +1,15 @@
+from asyncio import create_task, sleep
 from textwrap import dedent
-from time import ctime, time, sleep
+from time import ctime, time
 from typing import List
 
 from pyrogram.enums import ParseMode
 from pyrogram.types import (CallbackQuery, InlineKeyboardButton,
                             InlineKeyboardMarkup)
 
-from .. import app, BASE_FOLDER
+from .. import BASE_FOLDER, app, folder
 from ..util import humanReadable
-from .type import Download
-from threading import Thread
+from .types import Download
 
 downloads: List[Download] = []
 running: int = 0
@@ -17,38 +17,42 @@ running: int = 0
 stop: List[int] = []
 
 
-def run():
+async def run():
     global running
     while True:
         for download in downloads:
             if running == 3:
                 break
-            Thread(target=downloadFile, args=(download,)).start()
+            create_task(downloadFile(download))
             running += 1
             downloads.remove(download)
-        sleep(1)
+        try:
+            await sleep(1)
+        except:
+            break
 
 
-def downloadFile(d: Download):
+async def downloadFile(download: Download):
     global running
-    d.progress_message.edit(
-        text=f"Downloading __{d.filename}__...",
+    await download.progress_message.edit(
+        text=f"Downloading __{download.filename}__...",
         parse_mode=ParseMode.MARKDOWN
     )
-    d.started = time()
-    result = app.download_media(
-        message=d.from_message,
-        file_name=BASE_FOLDER+'/'+d.filename,
+    download.started = time()
+    result = await app.download_media(
+        message=download.from_message,
+        file_name=BASE_FOLDER+'/'+download.filename,
         progress=progress,
-        progress_args=tuple([d])
+        progress_args=tuple([download])
     )
     if isinstance(result, str):
-        speed = humanReadable(d.size / (d.last_call - d.started))
-        d.progress_message.edit(
+        speed = humanReadable(
+            download.size / (download.last_call - download.started))
+        await download.progress_message.edit(
             dedent(f"""
-                File __{d.filename}__ downloaded.
+                File __{download.filename}__ downloaded.
 
-                Downloaded started at __{ctime(d.started)}__ and finished at __{ctime(d.last_call)}__
+                Downloaded started at __{ctime(download.started)}__ and finished at __{ctime(download.last_call)}__
                 It's an average speed of __{speed}/s__
             """),
             parse_mode=ParseMode.MARKDOWN
