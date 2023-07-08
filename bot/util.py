@@ -19,7 +19,7 @@ def humanReadable(size: int) -> str:
     elif size >= KIB:
         symbol, divider = "KiB", KIB
     readableSize = size / divider
-    return f"{readableSize:.2f} {symbol}"
+    return f"{readableSize:.1f} {symbol}"
 
 
 def checkAdmins(func: Coroutine) -> Coroutine:
