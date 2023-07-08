@@ -50,7 +50,7 @@ async def downloadFile(download: Download):
             download.size / (download.last_call - download.started))
         await download.progress_message.edit(
             dedent(f"""
-                File __{download.filename}__ downloaded.
+                File `{download.filename}` downloaded.
 
                 Downloaded started at __{ctime(download.started)}__ and finished at __{ctime(download.last_call)}__
                 It's an average speed of __{speed}/s__
@@ -64,7 +64,7 @@ async def progress(received: int, total: int, download: Download):
     # This function is called every time that 1MB is downloaded
     if download.id in stop:
         await download.progress_message.edit(
-            text=f"Download of __{download.filename}__ stopped!",
+            text=f"Download of `{download.filename}` stopped!",
             parse_mode=ParseMode.MARKDOWN
         )
         await app.stop_transmission()
@@ -84,10 +84,10 @@ async def progress(received: int, total: int, download: Download):
     avg_speed = received / (now - download.started)
     await download.progress_message.edit(
         text=dedent(f'''
-            Downloading: __{download.filename}__
+            Downloading: `{download.filename}`
 
             Downloaded __{humanReadable(received)}__ of __{humanReadable(total)}__ (__{percent:.2f}%__)
-            __{humanReadable(speed)}/s__ or __{humanReadable(avg_speed)}/s__ average since start
+            __{humanReadable(speed)}/s__ | __{humanReadable(avg_speed)}/s__ avg speed
         '''),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup([[

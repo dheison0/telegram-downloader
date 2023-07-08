@@ -16,6 +16,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(botHelp, command('help')))
     app.add_handler(MessageHandler(usage, command('usage')))
     app.add_handler(MessageHandler(useFolder, command('use')))
+    app.add_handler(MessageHandler(getFolder, command('get')))
     app.add_handler(MessageHandler(leaveFolder, command('leave')))
     app.add_handler(MessageHandler(download.handler.addFile, document | media))
     app.add_handler(CallbackQueryHandler(download.manager.stopDownload))
@@ -37,17 +38,18 @@ async def botHelp(_, message: Message):
 
         /usage: Gets the disk usage
         /use: Use a specific folder inside storage
-        /leave: Go back to root storage
+        /get: Gets in which folder I am
+        /leave: Go back to the root of storage
     """))
 
 
 @checkAdmins
 async def usage(_, message: Message):
-    u = sysinfo.diskUsage(DL_FOLDER)
+    usage = sysinfo.diskUsage(DL_FOLDER)
     await message.reply(
         dedent(f"""
-            The storage path configured has __{u.capacity}__ of storage"
-            Of those, __{u.used}__ is in use, and __{u.free}__ is free
+            The storage path configured has __{usage.capacity}__ of storage
+            Of those, __{usage.used}__ is in use, and __{usage.free}__ is free.
         """),
         parse_mode=ParseMode.MARKDOWN
     )
@@ -56,10 +58,13 @@ async def usage(_, message: Message):
 @checkAdmins
 async def useFolder(_, message: Message):
     args = message.text.split()
-    userSetPath = ' '.join(args[1:])
+    userSetPath = ' '.join(args[1:]).strip()
+    if not userSetPath:
+        await message.reply("You haven't told me where I need to put your files!")
+        return
     path = userSetPath.replace('../', '').replace('/..', '')
     if userSetPath != path:
-        await message.reply(f"Warning: Path is **{path}** not **{' '.join(args[1:])}**")
+        await message.reply(f"Warning: Path is `{path}` not `{' '.join(args[1:])}`")
     folder.set(path)
     await message.reply("Ok, send me files now and I will put it on this folder.")
 
@@ -72,4 +77,5 @@ async def leaveFolder(_, message: Message):
 
 @checkAdmins
 async def getFolder(_, message: Message):
-    await message.reply(f"I'm on the \"{folder.getPath()}\" folder")
+    path = folder.getPath()
+    await message.reply(f"I'm on the `{path}` folder")

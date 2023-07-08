@@ -25,11 +25,11 @@ async def addFile(_, message: Message):
     realFile = os.path.join(folder.get(), filename)
     if os.path.isfile(realFile):
         return await message.reply(
-            text=f"File __{file}__ already exists!",
+            text=f"File `{file}` already exists!",
             quote=True
         )
     progress = await message.reply(
-        f"File __{file}__ added to list.",
+        f"File `{file}` added to list.",
         quote=True,
         parse_mode=ParseMode.MARKDOWN
     )
