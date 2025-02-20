@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
+from pyrogram.client import Client
 from pyrogram.types import Message
 
 
 @dataclass
 class Download:
+    client: Client
     id: int
     filename: str
     from_message: Message

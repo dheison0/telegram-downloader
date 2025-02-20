@@ -10,7 +10,7 @@ class Usage:
     capacity: str
     used: str
     free: str
-    percent: int
+    percent: str
 
 
 def diskUsage(folder: str = DL_FOLDER) -> Usage:
@@ -18,6 +18,6 @@ def diskUsage(folder: str = DL_FOLDER) -> Usage:
     return Usage(
         used=util.humanReadable(usage.used),
         capacity=util.humanReadable(usage.total),
-        free=util.humanReadable(usage.total-usage.used),
-        percent=f"{usage.percent:.0f}%"
+        free=util.humanReadable(usage.total - usage.used),
+        percent=f"{usage.percent:.0f}%",
     )

@@ -1,6 +1,9 @@
 # Folders
-.venv/
-__pycache__/
+.venv
+.vscode
+.ruff*
+__pycache__
+tmp
 
 # Files
 .env

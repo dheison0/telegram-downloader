@@ -1,5 +1,1 @@
-.venv
-.git
-bot.session
-bot.session-journal
-__pycache__
+.gitignore

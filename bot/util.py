@@ -24,9 +24,12 @@ def humanReadable(size: int) -> str:
 
 def checkAdmins(func: Coroutine) -> Coroutine:
     async def wrapper(app: Client, message: Message):
-        if (f"@{message.chat.username}" not in ADMINS) \
-                and (str(message.chat.id) not in ADMINS):
+        if (f"@{message.chat.username}" not in ADMINS) and (
+            str(message.chat.id) not in ADMINS
+        ):
             await message.reply("You aren't my admin :)")
             return
         return await func(app, message)
+
     return wrapper
+

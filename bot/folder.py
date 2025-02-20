@@ -20,7 +20,7 @@ def set(path: str):
 
 
 def getPath() -> str:
-    return storage.replace(BASE_FOLDER, '', 1) or "/"
+    return storage.replace(BASE_FOLDER, "", 1) or "/"
 
 
 def get() -> str:

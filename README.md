@@ -32,9 +32,12 @@ lib sometimes needs to be builded locally.
 
 Observation: *This bot support dot files(`.env`)*
 
-Now that you've your own ID/Hash it has be passed to `TELEGRAM_API_ID` and
+Now that you've your own ID/Hash it has to be passed to `TELEGRAM_API_ID` and
 `TELEGRAM_API_HASH` environment variables, you also need to set the bot token(create
-one [here][BotFather]) as `BOT_TOKEN`
+one [here][BotFather]) as `BOT_TOKEN`, and if you want to download files from channels
+that doesn't allow forwarding/copying content you need to set `PHONE_NUMBER` with your
+number that is used on a telegram account that is allowed to access the content you want
+to download.
 
 The default download folder is `/data`, if you want to set another location define that
 as `DOWNLOAD_FOLDER`
@@ -63,11 +66,13 @@ values with your owns:
 docker build -t telegram-downloader .
 
 # Now run this
-docker run -d \
+docker run \
+    -it `# optional, use -d if you won't use your account to download content` \
     -v /home/$USER/Telegram:/data \
     -e TELEGRAM_API_ID=123456 \
     -e TELEGRAM_API_HASH="yourTelegramAPIHash" \
     -e BOT_TOKEN="yourBotToken" \
+    -e PHONE_NUMBER="yourPhoneNumber" `# optional` \
     -e ADMINS="@yourTelegramUsername" \
     telegram-downloader
 ```
