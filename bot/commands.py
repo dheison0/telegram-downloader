@@ -1,3 +1,4 @@
+import logging
 from textwrap import dedent
 
 from pyrogram.client import Client
@@ -7,9 +8,7 @@ from pyrogram.handlers.callback_query_handler import CallbackQueryHandler
 from pyrogram.handlers.message_handler import MessageHandler
 from pyrogram.types import Message
 
-from . import DL_FOLDER, folder, sysinfo, user
-from .download.handler import addFile, addFileFromUser
-from .download.manager import stopDownload
+from . import DL_FOLDER, download, folder, sysinfo, user
 from .util import checkAdmins
 
 bot_help = """
@@ -34,8 +33,10 @@ def register(app: Client):
     addCommand(app, leaveFolder, "leave")
     addCommand(app, getFolder, "get")
     addCommand(app, addByLink, "add")
-    app.add_handler(MessageHandler(checkAdmins(addFile), document | media))
-    app.add_handler(CallbackQueryHandler(stopDownload))
+    app.add_handler(
+        MessageHandler(checkAdmins(download.handler.addFile), document | media)
+    )
+    app.add_handler(CallbackQueryHandler(download.manager.stopDownload))
 
 
 def addCommand(app, func, cmd):
@@ -71,17 +72,30 @@ async def addByLink(_, message: Message):
         return
     messageParts = message.text.split()
     if len(messageParts) == 1 or "://" not in messageParts[1]:
-        await message.reply("You don't send a link to message!")
+        await message.reply("You don't sent a link to message!")
         return
-    linkParts = messageParts[1].split("/")
-    messageID = int(linkParts[-1])
-    chatID = int(f"-100{linkParts[-2]}")
+    linkParts = messageParts[1].split("/c/")
+    if len(linkParts) < 2:
+        await message.reply("Invalid link!")
+        return
+    # Structure can be: [chatID, messageID] or [chatID, topicID, messageID]
+    ids = linkParts[1].split("/")
+    chatID = int(f"-100{ids[0]}")  # First item is domain and second is chat id
+    messageID = int(ids[-1])  # Last item is always message id
     try:
         messages = await user.get_messages(chatID, [messageID])
-    except:
+    except Exception as error:
+        logging.error(
+            "Getting messages from user",
+            {"chatID": chatID, "messageID": messageID},
+            error,
+        )
         await message.reply("Message not found on normal user!")
         return
-    await addFileFromUser(messages[0], message)
+    if not messages[0].media:
+        await message.reply("The message linked has no media files!")
+        return
+    await download.handler.addFileFromUser(messages[0], message)
 
 
 async def usage(_, message: Message):
