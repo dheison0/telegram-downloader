@@ -16,8 +16,8 @@ class Usage:
 def diskUsage(folder: str = DL_FOLDER) -> Usage:
     usage = psutil.disk_usage(folder)
     return Usage(
-        used=util.humanReadable(usage.used),
-        capacity=util.humanReadable(usage.total),
-        free=util.humanReadable(usage.total - usage.used),
+        used=util.humanReadableSize(usage.used),
+        capacity=util.humanReadableSize(usage.total),
+        free=util.humanReadableSize(usage.total - usage.used),
         percent=f"{usage.percent:.0f}%",
     )

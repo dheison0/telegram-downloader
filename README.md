@@ -39,8 +39,9 @@ that doesn't allow forwarding/copying content you need to set `PHONE_NUMBER` wit
 number that is used on a telegram account that is allowed to access the content you want
 to download.
 
-The default download folder is `/data`, if you want to set another location define that
-as `DOWNLOAD_FOLDER`
+The default **download** folder is `/data`, if you want to set another location define that
+as `DOWNLOAD_FOLDER`, default **session** storage path is `/config` but it can be set by
+`CONFIG_FOLDER`, this can be usefull for saving session across updates.
 
 You also need to set the bot administrator list using `ADMINS`, use spaces to separate
 everyone.
@@ -68,7 +69,8 @@ docker build -t telegram-downloader .
 # Now run this
 docker run \
     -it `# optional, use -d if you won't use your account to download content` \
-    -v /home/$USER/Telegram:/data \
+    -v /home/$USER/TDownloader/data:/data \
+    -v /home/$USER/TDownloader/config:/config \
     -e TELEGRAM_API_ID=123456 \
     -e TELEGRAM_API_HASH="yourTelegramAPIHash" \
     -e BOT_TOKEN="yourBotToken" \

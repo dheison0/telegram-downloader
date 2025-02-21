@@ -1,3 +1,4 @@
+import logging
 from asyncio import create_task, sleep
 from textwrap import dedent
 from time import ctime, time
@@ -7,8 +8,8 @@ from pyrogram.client import Client
 from pyrogram.enums import ParseMode
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from .. import BASE_FOLDER
-from ..util import humanReadable
+from .. import BASE_FOLDER, MAX_SIMULTANEOUS_TRANSMISSIONS
+from ..util import humanReadableSize, humanReadableTime
 from .types import Download
 
 downloads: List[Download] = []
@@ -21,9 +22,10 @@ async def run():
     global running
     while True:
         for download in downloads:
-            if running == 3:
+            if running == MAX_SIMULTANEOUS_TRANSMISSIONS:
                 break
             create_task(downloadFile(download))
+            logging.info(f"New download initialized: {download.filename}")
             running += 1
             downloads.remove(download)
         try:
@@ -35,7 +37,8 @@ async def run():
 async def downloadFile(download: Download):
     global running
     await download.progress_message.edit(
-        text=f"Downloading __{download.filename}__...", parse_mode=ParseMode.MARKDOWN
+        text=f"Starting download...",
+        parse_mode=ParseMode.MARKDOWN,
     )
     download.started = time()
     result = await download.client.download_media(
@@ -44,17 +47,14 @@ async def downloadFile(download: Download):
         progress=createProgress(download.client),
         progress_args=tuple([download]),
     )
-    #if download.last_call == 0:
-        # if file size is less than 1MiB it won't call progress function
-    #    download.last_call = time()
     if isinstance(result, str):
-        speed = humanReadable(download.size / (download.last_call - download.started))
+        seconds_took = download.last_update - download.started
+        speed = humanReadableSize(download.size / seconds_took)
+        time_took = humanReadableTime(int(seconds_took))
         await download.progress_message.edit(
             dedent(f"""
                 File `{download.filename}` downloaded.
-
-                Downloaded started at __{ctime(download.started)}__ and finished at __{ctime(download.last_call)}__
-                It's an average speed of __{speed}/s__
+                Download of {humanReadableSize(download.size)} complete in {time_took}, it's an average speed of __{speed}/s__
             """),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -70,26 +70,23 @@ def createProgress(client: Client):
                 parse_mode=ParseMode.MARKDOWN,
             )
             stop.remove(download.id)
-            await client.stop_transmission()
+            client.stop_transmission()
             return
         # Only update download progress if the last update is 1 second old
         # : This avoid flood on networks that is more than 1MB/s speed
         now = time()
-        if download.last_update != 0 and (time() - download.last_update) < 1:
-            download.last_call = now
+        if download.last_update != 0 and (time() - download.last_update) < running:
+            # Do not update message time from last_update is less than running download count
             return
-        download.size = total
+        download.last_update = now
         percent = received / total * 100
-        if download.last_call == 0:
-            download.last_call = now - 1
-        speed = (1024**2) / (now - download.last_call)
         avg_speed = received / (now - download.started)
+        tte = int((total - received) / avg_speed)
         await download.progress_message.edit(
             text=dedent(f"""
-                Downloading: `{download.filename}`
-
-                Downloaded __{humanReadable(received)}__ of __{humanReadable(total)}__ (__{percent:.2f}%__)
-                __{humanReadable(speed)}/s__ | __{humanReadable(avg_speed)}/s__ avg speed
+            `{download.filename}`:
+            __{humanReadableSize(received)}/{humanReadableSize(total)} {percent:0.2f}%
+            {humanReadableSize(avg_speed)}/s {humanReadableTime(tte)} till complete__
             """),
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=InlineKeyboardMarkup(
@@ -97,7 +94,8 @@ def createProgress(client: Client):
             ),
         )
         download.last_update = now
-        download.last_call = now
+        download.size = total
+
     return progress
 
 
